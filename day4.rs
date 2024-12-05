@@ -1,81 +1,28 @@
 use std::{fs::File, io::Read, iter, time::Instant};
 
-#[derive(PartialEq, Debug, Clone, Copy)]
-enum Direction {
-    Top((i32, i32)),
-    Down((i32, i32)),
-    Left((i32, i32)),
-    Right((i32, i32)),
-    TopRight((i32, i32)),
-    TopLeft((i32, i32)),
-    BottomRight((i32, i32)),
-    BottomLeft((i32, i32)),
-}
-
-//this ends up being quite bad i think because we have to run time follow a pointer. also extra
-//space less cache. silver is actually heavily parralizable
-let Direction = (i32,i32);
-
-impl Direction {
-    fn as_tuple(&self) -> (i32, i32) {
-        match self {
-            Direction::Top(tuple) => *tuple,
-            Direction::Down(tuple) => *tuple,
-            Direction::Left(tuple) => *tuple,
-            Direction::Right(tuple) => *tuple,
-            Direction::TopRight(tuple) => *tuple,
-            Direction::TopLeft(tuple) => *tuple,
-            Direction::BottomRight(tuple) => *tuple,
-            Direction::BottomLeft(tuple) => *tuple,
-        }
-    }
-
-    const fn top() -> Self {
-        Direction::Top((-1, 0))
-    }
-
-    const fn down() -> Self {
-        Direction::Down((1, 0))
-    }
-
-    const fn left() -> Self {
-        Direction::Left((0, -1))
-    }
-
-    const fn right() -> Self {
-        Direction::Right((0, 1))
-    }
-
-    const fn top_right() -> Self {
-        Direction::TopRight((-1, 1))
-    }
-
-    const fn top_left() -> Self {
-        Direction::TopLeft((-1, -1))
-    }
-
-    const fn bottom_right() -> Self {
-        Direction::BottomRight((1, 1))
-    }
-
-    const fn bottom_left() -> Self {
-        Direction::BottomLeft((1, -1))
-    }
-}
+type Direction = (i32,i32);
+const Top: Direction = (-1,0);
+const Down: Direction = (1, 0);
+const Left: Direction = (0, -1);
+const Right: Direction = (0, 1);
+const TopRight: Direction = (-1, 1);
+const TopLeft: Direction = (-1, -1);
+const BottomRight: Direction = (1, 1);
+const BottomLeft: Direction = (1, -1);
 
 fn open_file(path: &str) -> File {
     File::open(path).expect(&format!("Error opening file at path, {}.", path))
 }
 
 static DIRECTIONS: [Direction; 8] = [
-    Direction::top(),
-    Direction::down(),
-    Direction::left(),
-    Direction::right(),
-    Direction::top_right(),
-    Direction::top_left(),
-    Direction::bottom_right(),
-    Direction::bottom_left(),
+    Top,
+    Down,
+    Left,
+    Right,
+    TopRight,
+    TopLeft,
+    BottomRight,
+    BottomLeft,
 ];
 
 fn validate_indices(i: i32, j:i32, num_row: usize, num_col: usize ) -> Option<(usize, usize)>{
@@ -110,7 +57,7 @@ fn check_index(i: i32, j: i32, mat: &[&[u8]], remain: &str, direction: Direction
     if mat[ui][uj] == *first_char {
             let mut chars = remain.chars();
             chars.next();
-            let (dy, dx) = direction.as_tuple();
+            let (dy, dx) = direction;
             check_index(i + dy, j + dx, mat, chars.as_str(), direction)
     } else {
         false
@@ -135,9 +82,9 @@ fn solve_silver(input: &str) -> u64 {
 }
 
 fn validate_opps(mat: &[&[u8]], i: usize, j: usize, direction_one: Direction, direction_two: Direction) -> bool {
-    let (dy, dx) = direction_one.as_tuple();
-    let i_new = <i32 as std::convert::TryFrom<_>>::try_from(i).unwrap() + dx;
-    let j_new = <i32 as std::convert::TryFrom<_>>::try_from(j).unwrap() + dy;
+    let (dy, dx) = direction_one;
+    let i_new = i as i32 + dx;
+    let j_new = j as i32 + dy;
 
     let (ui, uj) = match validate_indices(i_new, j_new, mat.len(), mat[0].len()) {
         Some(indices) => indices,
@@ -145,9 +92,9 @@ fn validate_opps(mat: &[&[u8]], i: usize, j: usize, direction_one: Direction, di
     };
 
     if mat[ui][uj] == 77 /*M*/ {
-        let (dy, dx) = direction_two.as_tuple();
-        let i = <i32 as std::convert::TryFrom<_>>::try_from(i).unwrap() + dx;
-        let j = <i32 as std::convert::TryFrom<_>>::try_from(j).unwrap() + dy;
+        let (dy, dx) = direction_two;
+        let i = i as i32 + dx;
+        let j = j as i32 + dy;
 
         let (ui, uj) = match validate_indices(i, j, mat.len(), mat[0].len()) {
             Some(indices) => indices,
@@ -158,9 +105,9 @@ fn validate_opps(mat: &[&[u8]], i: usize, j: usize, direction_one: Direction, di
     }
 
     if mat[ui][uj] == 83 /*S*/ {
-        let (dy, dx) = direction_two.as_tuple();
-        let i = <i32 as std::convert::TryFrom<_>>::try_from(i).unwrap() + dx;
-        let j = <i32 as std::convert::TryFrom<_>>::try_from(j).unwrap() + dy;
+        let (dy, dx) = direction_two;
+        let i = i as i32 + dx;
+        let j = j as i32 + dy;
 
         let (ui, uj) = match validate_indices(i, j, mat.len(), mat[0].len()) {
             Some(indices) => indices,
@@ -176,14 +123,15 @@ fn validate_opps(mat: &[&[u8]], i: usize, j: usize, direction_one: Direction, di
 }
 
 fn solve_gold(input: &str) -> u64 {
+
     let mat: Vec<&[u8]> = input.split_terminator('\n').map(|s| s.as_bytes()).collect();
     let mut total = 0;
 
     for i in 0..mat.len() {
         for j in 0..mat[i].len(){ 
             if mat[i][j] == 65 /*A*/{
-                let cond_one = validate_opps(&mat, i, j , Direction::bottom_right(), Direction::top_left());
-                let cond_two = validate_opps(&mat, i, j , Direction::bottom_left(), Direction::top_right());
+                let cond_one = validate_opps(&mat, i, j , BottomRight, TopLeft);
+                let cond_two = validate_opps(&mat, i, j , BottomLeft, TopRight);
                 if cond_one && cond_two{
                     total +=1
                 }
