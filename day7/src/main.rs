@@ -29,6 +29,10 @@ fn execute_opp(opp: char, previous: u64, index: usize, series: &[u64]) -> u64 {
         return match opp{
             '*'=>{series[0]*series[1]}
             '+'=>{series[0]+series[1]}
+            '|' => {
+                let concatenated = format!("{}{}", series[0], series[1]);
+                concatenated.parse::<u64>().expect("Failed to parse concatenated string to int")
+            }
             _ => panic!("bad opp")
 
         }
@@ -36,6 +40,10 @@ fn execute_opp(opp: char, previous: u64, index: usize, series: &[u64]) -> u64 {
     match opp {
         '*'=>{series[index]*previous}
         '+'=>{series[index]+previous}
+        '|' => {
+            let concatenated = format!("{}{}", previous, series[index]);
+            concatenated.parse::<u64>().expect("Failed to parse concatenated string to int")
+        }
         _ => panic!("bad opp")
     }
 }
@@ -60,13 +68,22 @@ fn recur(previous_result: Option<u64>, curr_index: usize, series: &[u64], target
 
     temp = execute_opp('+', previous_result, curr_index, series);
     if temp <= target {
+        let maybe_result = recur(Some(temp), curr_index + 1, series, target);
+
+        if maybe_result.is_some(){
+            return maybe_result
+        }
+    }
+
+    temp = execute_opp('|', previous_result, curr_index, series);
+    if temp <= target {
         return recur(Some(temp), curr_index + 1, series, target);
     }
 
     None
 }
 
-fn solve_silver(targets: &[u64], series: &[Vec<u64>]) -> u64 { 
+fn solve(targets: &[u64], series: &[Vec<u64>]) -> u64 { 
     let mut result = 0;
     let input = targets.iter().zip(series);
 
@@ -81,6 +98,10 @@ fn solve_silver(targets: &[u64], series: &[Vec<u64>]) -> u64 {
    result
 }
 
+//got distracted for a while cause i didn't read the rules!! 
+// thought || was not obeying precedence/had precedence
+// this led to a bad implementation. 
+// anyway without that it is super easy.
 fn main() {
     let path = "src/data.txt";
     let mut file = open_file(path);
@@ -88,7 +109,7 @@ fn main() {
 
     let _ = file.read_to_string(&mut data);
     let (parsed_target, parsed_inputs) = parser(&data);
-    let result = solve_silver(&parsed_target, &parsed_inputs);
+    let result = solve(&parsed_target, &parsed_inputs);
     //let parsed: Vec<&str> = data.split_terminator('\n').collect();
     println!("{}", result);
 }
