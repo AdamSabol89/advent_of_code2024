@@ -52,7 +52,7 @@ fn sort_join(arr1: &[u64], arr2: &[u64]) -> u64 {
 
 fn hash_join(arr1: &[u64], arr2: &[u64]) -> u64 {
     //data is already sorted tho lol
-    let mut map: HashMap<u64, u64> = HashMap::with_capacity(250);
+    let mut map: HashMap<u64, u64> = HashMap::with_capacity(4_000_000);
     for data in arr2.iter() {
         let count = map.entry(*data).or_insert(0);
         *count += 1;
@@ -73,10 +73,9 @@ fn main() {
     let path = "/home/adam/repos/advent_of_code_2024/data/bigboy.txt";
     let f = open_file(path);
     let mut reader = BufReader::new(f);
-    let mut buffer = String::new();
+    let mut buffer = String::with_capacity(70_000_000);
 
-    let mut arr1 = Vec::with_capacity(1000);
-    let mut arr2 = Vec::with_capacity(1000);
+    let (mut arr1, mut arr2) = (Vec::with_capacity(4_000_000), Vec::with_capacity(4_000_000));
     while let Ok(read) = reader.read_line(&mut buffer) {
         if read == 0 {
             break;
@@ -84,8 +83,7 @@ fn main() {
         let data: Vec<&str> = buffer.split("   ").map(|s| s.trim()).collect();
         let (p1, p2) = string_to_uint(&data);
 
-        arr1.push(p1);
-        arr2.push(p2);
+        arr1.push(p1);arr2.push(p2);
 
         buffer.clear()
     }
@@ -96,7 +94,6 @@ fn main() {
     let sort_duration = sort_start.elapsed();
 
     let mut result: u64 = 0;
-
     for (p1, p2) in arr1.iter().zip(arr2.iter()) {
         result += u64::abs_diff(*p1, *p2);
     }
@@ -111,7 +108,11 @@ fn main() {
     start = Instant::now();
     let result_3 = sort_join(&arr1, &arr2);
     duration = start.elapsed();
-    println!("Sort join implementation took: {:?}", duration.add(sort_duration));
+
+    println!(
+        "Sort join implementation took: {:?}",
+        duration.add(sort_duration)
+    );
 
     println!(
         "p2 result. hash join {}. p2 result. sort join {}",
