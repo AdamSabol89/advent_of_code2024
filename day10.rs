@@ -22,12 +22,12 @@ fn validate_indices(i: isize, j: isize, num_row: usize, num_col: usize ) -> Opti
     Some((ui, uj))
 }
 
-fn dfs_from(seen_map: &mut Vec<bool>, topo_map: &[Vec<u64>], i: usize, j: usize, target: usize, result: &mut usize) -> bool { 
+fn dfs_from(seen_map: &mut Vec<bool>, topo_map: &[Vec<u64>], i: usize, j: usize, target: usize, result: &mut usize) { 
     let ii = i as isize; 
     let ij = j as isize; 
 
     if topo_map[i][j] != target as u64{
-        return false
+        return 
     }
 
 
@@ -40,7 +40,7 @@ fn dfs_from(seen_map: &mut Vec<bool>, topo_map: &[Vec<u64>], i: usize, j: usize,
 
     if topo_map[i][j] == 9{
         *result +=1;
-        return true
+        return
     }
 
     let directions = [(-1, 0), (1, 0), (0, -1), (0, 1)];
@@ -49,15 +49,10 @@ fn dfs_from(seen_map: &mut Vec<bool>, topo_map: &[Vec<u64>], i: usize, j: usize,
     for (di, dj) in directions {
         if let Some((ni, nj)) = validate_indices(ii + di, ij + dj, topo_map.len(), topo_map[0].len())
         {
-            // Recur to the next cell, aggregate results across all directions
-            if dfs_from(seen_map, topo_map, ni, nj, target + 1, result) {
-                found = true;
-            }
+            dfs_from(seen_map, topo_map, ni, nj, target + 1, result)
         }
     }
 
-    // Return true if any direction found the target
-    found
 }
 
 fn solve_silver(topo_map: &[Vec<u64>]) -> usize {
